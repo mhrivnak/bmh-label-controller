@@ -24,6 +24,8 @@ These are the rough steps I took. I threw together this PoC quickly, but it
 does work when run locally via `operator-sdk run --local`.
 
 * Use operator-sdk to create a new ansible-based operator. Make up any GVK for the required parameters.
-* Change the [`watches.yaml`](watches.yaml) file to look exactly like this one.
+* Change the [`watches.yaml`](watches.yaml) file to look like this one. Ensure
+  the `role` value matches the name of your role, which is just the name of the
+  subdirectory under the `roles/` directory.
 * Delete `deploy/crds`.
 * Edit the [tasks file](roles/baremetalhost/tasks/main.yml) to to add logic for appling labels and/or annotations.
