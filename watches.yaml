@@ -1,0 +1,6 @@
+---
+- version: v1alpha1
+  group: metal3.io
+  kind: BareMetalHost
+  role: baremetalhost
+  manageStatus: false

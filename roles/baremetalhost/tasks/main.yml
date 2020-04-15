@@ -1,0 +1,38 @@
+---
+
+# Make a copy of the resource that's easier to access and modify
+- set_fact:
+    updated_host: "{{ _metal3_io_baremetalhost }}"
+
+- debug:
+    msg: "{{ updated_host }}"
+
+# in case there are no labels, we need to set an empty dict so the "combine"
+# statements below will work
+- name: set empty labels dict if no labels are yet defined
+  set_fact:
+    updated_host: "{{ updated_host|combine({'metadata': {'labels': {}}}, recursive=True) }}"
+  when: ('labels' not in updated_host.metadata)
+
+# Below are three examples of setting labels based on various data in the host's status.
+- name: apply labels
+  block:
+  - name: set lots-of-cpus label
+    set_fact:
+      updated_host: "{{ updated_host|combine({'metadata': {'labels': {'lots-of-cpus': 'true'}}}, recursive=True) }}"
+    when: updated_host.status.hardware.cpu.count > 32
+
+  - name: set old bios label if bios date is before 2019
+    set_fact:
+      updated_host: "{{ updated_host|combine({'metadata': {'labels': {'old-bios': 'true'}}}, recursive=True) }}"
+    when: (updated_host.status.hardware.firmware.bios.date|to_datetime('%m/%d/%Y')) < ('1/1/2019'|to_datetime('%m/%d/%Y'))
+
+  - name: set plent-of-nics label if there are at least 2 nics
+    set_fact:
+      updated_host: "{{ updated_host|combine({'metadata': {'labels': {'plenty-of-nics': 'true'}}}, recursive=True) }}"
+    when: updated_host.status.hardware.nics | length >= 2
+
+  - k8s:
+      definition: "{{ updated_host }}"
+  # We don't want to run this if there is no Status set yet on the host.
+  when: updated_host.status is defined and 'hardware' in updated_host.status
